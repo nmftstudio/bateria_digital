@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Fateria</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;500;700&display=swap');
+
+:root {
+  --bg: #0d0d0f;
+  --floor: #111318;
+  --accent: #ff4422;
+  --accent2: #ffaa00;
+  --chrome: #c8cdd6;
+  --chrome-dark: #6a7080;
+  --gold: #d4a017;
+  --gold-hi: #f5d060;
+  --wood: #7a3a10;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:none; }
+
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+}
+
+body {
+  background: radial-gradient(ellipse at 50% 30%, #1a1a28 0%, #0d0d0f 70%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  font-family:'Rajdhani',sans-serif;
+  user-select:none;
+  overflow:hidden;
+}
+
+/* Subtle floor texture */
+body::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(30,20,10,0.6) 0%, transparent 70%),
+    repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ====== HEADER ====== */
+header {
+  position:relative;
+  z-index:10;
+  width:100%;
+  max-width:700px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 16px 4px;
+  flex-shrink:0;
+}
+
+.logo {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(30px,7vw,52px);
+  letter-spacing:8px;
+  background:linear-gradient(135deg,#ffcc00,#ff8800,#ff3300);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 8px rgba(255,120,0,0.4));
+  line-height:1;
+}
+.tagline {
+  font-size:9px;
+  letter-spacing:4px;
+  color:var(--chrome-dark);
+  text-transform:uppercase;
+  margin-top:1px;
+}
+
+.header-right { display:flex; gap:8px; align-items:center; }
+
+/* TRANSPORT */
+.transport {
+  position:relative;
+  z-index:10;
+  width:100%;
+  max-width:700px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 14px;
+  background:rgba(0,0,0,0.4);
+  border-top:1px solid rgba(255,255,255,0.05);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  flex-shrink:0;
+}
+
+.tbtn {
+  font-family:'Bebas Neue',sans-serif;
+  letter-spacing:2px;
+  border-radius:5px;
+  cursor:pointer;
+  border:none;
+  padding:5px 10px;
+  font-size:13px;
+  transition:all 0.1s;
+  white-space:nowrap;
+}
+.tbtn-rec { background:#200000; color:#ff3333; border:1px solid #ff3333; }
+.tbtn-rec.active { background:#ff3333; color:#fff; animation:recBlink .7s infinite; box-shadow:0 0 10px #ff333366; }
+.tbtn-play { background:#001200; color:#44ff88; border:1px solid #44ff88; }
+.tbtn-play.playing { background:#44ff88; color:#000; box-shadow:0 0 10px #44ff8866; }
+.tbtn-stop { background:rgba(255,255,255,0.05); color:#888; border:1px solid #333; }
+.tbtn-del  { background:rgba(255,255,255,0.03); color:#555; border:1px solid #2a2a2a; font-size:14px; padding:5px 8px; }
+.tbtn:active { transform:scale(0.92); }
+@keyframes recBlink { 0%,100%{opacity:1}50%{opacity:0.65} }
+
+.waveform {
+  flex:1; height:24px;
+  background:rgba(0,0,0,0.4);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:4px;
+  overflow:hidden;
+  position:relative;
+}
+#waveCanvas { width:100%;height:100%;display:block; }
+.playhead { position:absolute;top:0;bottom:0;width:2px;background:#44ff88;box-shadow:0 0 5px #44ff88;display:none;pointer-events:none; }
+
+.t-info { font-size:9px;letter-spacing:1.5px;color:var(--chrome-dark);text-align:right;line-height:1.6;min-width:50px; }
+.t-rec  { color:#ff3333;font-weight:700;font-size:11px; }
+.t-play { color:#44ff88;font-weight:700;font-size:11px; }
+
+/* SHOP BTN */
+.btn-shop {
+  font-family:'Bebas Neue',sans-serif;
+  background:linear-gradient(135deg,#180028,#2d0055);
+  color:#cc99ff;
+  border:1px solid #6622cc;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+  letter-spacing:2px;
+  white-space:nowrap;
+}
+.btn-shop:active { background:linear-gradient(135deg,#2d0055,#4400aa); }
+
+/* ====== STATUS ====== */
+.status-bar {
+  position:relative;z-index:10;
+  width:100%;max-width:700px;
+  display:flex;justify-content:space-between;
+  padding:2px 16px;
+  font-size:9px;letter-spacing:2px;color:var(--chrome-dark);
+  flex-shrink:0;
+}
+.s-hit { color:var(--accent2);font-weight:700; }
+.vel-bar { width:calc(100% - 28px);max-width:672px;height:2px;background:rgba(255,255,255,0.04);border-radius:2px;overflow:hidden;flex-shrink:0;position:relative;z-index:10;margin:0 14px 2px; }
+.vel-fill { height:100%;background:linear-gradient(90deg,#ff4444,#ff8800,#ffcc00);border-radius:2px;transition:width 0.07s;width:0%; }
+
+/* ====== STAGE — the drum kit area ====== */
+.stage {
+  position:relative;z-index:5;
+  width:100%;max-width:700px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:6px 10px 4px;
+  overflow:hidden;
+}
+
+/*
+  LAYOUT (drummer POV, top = far, bottom = near):
+  Row 0: cymbals back  (ride L, crash R back)
+  Row 1: cymbals front (hihat L, crash front-R, splash optional)
+  Row 2: toms (hanging) + floor tom right
+  Row 3: snare + kick drum body
+  Row 4: pedals (kick pedal center, hihat pedal left)
+*/
+
+.row {
+  width:100%;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  position:relative;
+}
+.row-cymbals-back  { margin-bottom:2px; gap:8px; padding:0 20px; justify-content:space-between; }
+.row-cymbals-front { margin-bottom:4px; gap:10px; padding:0 10px; justify-content:space-between; }
+.row-toms          { margin-bottom:4px; gap:8px; padding:0 8px; align-items:flex-end; }
+.row-main          { margin-bottom:2px; gap:10px; padding:0 6px; align-items:flex-end; }
+.row-pedals        { margin-bottom:0; gap:0; padding:0 6px; align-items:flex-start; justify-content:center; }
+
+/* ====== CYMBAL COMPONENT ====== */
+.cymbal-assy {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  position:relative;
+  flex-shrink:0;
+}
+.cymbal-assy .stand-tip {
+  width:5px;height:5px;
+  background:radial-gradient(circle,#ddd,#888);
+  border-radius:50%;
+  margin-bottom:-1px;
+  z-index:2;
+}
+.cymbal-assy .stand-rod {
+  width:2px;
+  background:linear-gradient(90deg,#777,#ccc,#777);
+  border-radius:1px;
+  flex-shrink:0;
+}
+.cymbal-pad {
+  position:relative;
+  cursor:pointer;
+  transition:transform 0.05s;
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,0.9)) drop-shadow(0 2px 4px rgba(180,130,0,0.3));
+  flex-shrink:0;
+}
+.cymbal-pad.hit {
+  transform:rotateX(18deg) scaleY(0.88) !important;
+  filter:drop-shadow(0 10px 24px rgba(212,160,23,1)) brightness(1.7);
+}
+.cymbal-pad svg { display:block;overflow:visible; }
+.cymbal-label {
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-size:7px;letter-spacing:1.5px;color:rgba(0,0,0,0.5);
+  font-weight:700;text-transform:uppercase;white-space:nowrap;
+  pointer-events:none;
+}
+
+/* ====== DRUM PAD COMPONENT ====== */
+.drum-pad {
+  position:relative;
+  cursor:pointer;
+  transition:transform 0.06s;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,0.95));
+  flex-shrink:0;
+}
+.drum-pad.hit { transform:scale(0.91) !important; }
+.drum-pad svg { display:block;overflow:visible; }
+.drum-label-ext {
+  position:absolute;
+  bottom:-16px;left:50%;
+  transform:translateX(-50%);
+  font-size:8px;letter-spacing:1.5px;color:var(--chrome-dark);
+  white-space:nowrap;font-weight:700;text-transform:uppercase;
+}
+
+/* ====== PEDALS ====== */
+.pedal-assy {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+  transition:transform 0.07s;
+  flex-shrink:0;
+  position:relative;
+}
+.pedal-assy.hit .pedal-plate { transform:rotateX(-22deg); filter:brightness(1.4); }
+.pedal-assy:active .pedal-plate { transform:rotateX(-22deg); filter:brightness(1.4); }
+.pedal-plate {
+  transition:transform 0.07s;
+  transform-origin:bottom center;
+  transform-style:preserve-3d;
+}
+
+/* ====== FLASH EFFECTS ====== */
+@keyframes flashHit { 0%{opacity:1;transform:scale(1)} 60%{opacity:0.6;transform:scale(1.08)} 100%{opacity:0;transform:scale(1.15)} }
+.hit-flash {
+  position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,200,50,0.85) 0%,transparent 68%);
+  animation:flashHit 0.18s ease-out forwards;
+  pointer-events:none;z-index:20;
+}
+@keyframes cymRipple { 0%{transform:scale(0.2);opacity:1} 100%{transform:scale(2.2);opacity:0} }
+.cym-ripple {
+  position:absolute;inset:0;border-radius:50%;
+  border:1.5px solid rgba(212,160,23,0.9);
+  animation:cymRipple 0.35s ease-out forwards;
+  pointer-events:none;z-index:20;
+}
+@keyframes playFlash { 0%{opacity:.8}100%{opacity:0} }
+.play-flash { background:radial-gradient(circle,rgba(68,255,136,0.7) 0%,transparent 70%) !important; animation:playFlash 0.13s ease-out forwards; }
+
+/* ====== SHOP MODAL ====== */
+.modal-overlay {
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.88);z-index:2000;
+  overflow-y:auto;backdrop-filter:blur(8px);
+}
+.modal-overlay.open { display:flex;align-items:flex-start;justify-content:center;padding:16px 0; }
+.shop-modal {
+  width:100%;max-width:600px;
+  background:linear-gradient(180deg,#0f0f1e,#090912);
+  border:1px solid rgba(100,40,220,0.3);
+  border-radius:16px;overflow:hidden;margin:0 10px;
+}
+.shop-hdr {
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 18px;
+  background:linear-gradient(90deg,#18002e,#0a0018);
+  border-bottom:1px solid rgba(100,40,220,0.3);
+}
+.shop-title { font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:5px;background:linear-gradient(135deg,#cc99ff,#7733ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+.shop-sub { font-size:9px;letter-spacing:3px;color:#6644aa;text-transform:uppercase; }
+.btn-close { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#bbb;font-size:18px;width:34px;height:34px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:sans-serif; }
+.shop-tabs { display:flex;border-bottom:1px solid rgba(255,255,255,0.07); }
+.shop-tab { flex:1;padding:9px 4px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:#444;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s; }
+.shop-tab.active { color:#cc99ff;border-bottom-color:#7733ff; }
+.shop-body { padding:14px; }
+.sec-lbl { font-size:9px;letter-spacing:3px;color:#5533aa;text-transform:uppercase;margin-bottom:8px;padding-bottom:3px;border-bottom:1px solid rgba(80,40,180,0.2); }
+.item-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:18px; }
+.shop-item { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:10px 8px;cursor:pointer;transition:all 0.14s;text-align:center;position:relative; }
+.shop-item:active,.shop-item:hover { background:rgba(90,40,200,0.14);border-color:rgba(90,40,200,0.5); }
+.shop-item.in-kit { border-color:#44aa66;background:rgba(68,170,102,0.08); }
+.shop-item .si-icon { font-size:26px;margin-bottom:3px; }
+.shop-item .si-name { font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;color:#ccc; }
+.shop-item .si-desc { font-size:8px;letter-spacing:1px;color:#555;margin-top:1px; }
+.si-badge { position:absolute;top:5px;right:5px;font-size:7px;letter-spacing:1px;padding:2px 4px;border-radius:3px;font-weight:700; }
+.badge-hot { background:#ff3333;color:#fff; }
+.badge-new { background:#ff8800;color:#000; }
+.badge-pro { background:#7733ff;color:#fff; }
+.kit-builder { display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px; }
+.kit-slot { background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.12);border-radius:7px;padding:9px 5px;text-align:center;cursor:pointer;transition:all 0.14s;min-height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px; }
+.kit-slot.filled { border-style:solid;border-color:rgba(90,40,200,0.4);background:rgba(90,40,200,0.09); }
+.kit-slot:active { border-color:#7733ff66; }
+.kit-slot .ks-icon { font-size:20px; }
+.kit-slot .ks-name { font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1.5px;color:#aaa; }
+.kit-slot .ks-lbl  { font-size:8px;letter-spacing:1px;color:#444;text-transform:uppercase; }
+.kit-slot .ks-rm   { font-size:8px;color:#ff4444;margin-top:1px;letter-spacing:1px;opacity:0;transition:opacity .15s; }
+.kit-slot.filled:active .ks-rm { opacity:1; }
+.preset-list { display:flex;flex-direction:column;gap:7px;margin-bottom:14px; }
+.preset-item { display:flex;align-items:center;gap:10px;padding:11px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:7px;cursor:pointer;transition:all 0.14s; }
+.preset-item:active,.preset-item:hover { background:rgba(90,40,200,0.1);border-color:rgba(90,40,200,0.35); }
+.preset-item.ap { border-color:#44aa66;background:rgba(68,170,102,0.07); }
+.pi-icon { font-size:24px; }
+.pi-info { flex:1; }
+.pi-name { font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:#ddd; }
+.pi-desc { font-size:9px;letter-spacing:1px;color:#555;margin-top:1px; }
+.pi-chk  { color:#44aa66;font-size:16px;opacity:0;transition:opacity .2s; }
+.preset-item.ap .pi-chk { opacity:1; }
+.apply-btn { width:100%;padding:11px;background:linear-gradient(135deg,#4400aa,#7733ff);color:#fff;border:none;border-radius:7px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:4px;cursor:pointer;transition:all .14s; }
+.apply-btn:active { transform:scale(0.97); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Fateria</div>
+    <div class="tagline">Vista del Baterista · Multi-touch · Pro</div>
+  </div>
+  <div class="header-right">
+    <button class="btn-shop" onclick="openShop()">🛒 SHOP</button>
+  </div>
+</header>
+
+<div class="status-bar">
+  <span id="sHit" class="s-hit">— READY —</span>
+  <span id="sCount">HITS: 0</span>
+</div>
+<div class="vel-bar"><div class="vel-fill" id="velFill"></div></div>
+
+<div class="transport">
+  <button class="tbtn tbtn-rec" id="btnRec" onclick="toggleRec()">⏺ REC</button>
+  <button class="tbtn tbtn-play" id="btnPlay" onclick="togglePlay()">▶ PLAY</button>
+  <button class="tbtn tbtn-stop" onclick="stopAll()">⏹</button>
+  <button class="tbtn tbtn-del" onclick="clearRec()" title="Borrar">🗑</button>
+  <div class="waveform"><canvas id="waveCanvas"></canvas><div class="playhead" id="playhead"></div></div>
+  <div class="t-info">
+    <div id="tRecDisp" class="t-rec" style="display:none">⏺ 0:00</div>
+    <div id="tPlayDisp" class="t-play" style="display:none">▶ 0:00</div>
+    <div id="tEvCount" style="font-size:8px;letter-spacing:1px;color:#444"></div>
+  </div>
+</div>
+
+<!-- THE STAGE -->
+<div class="stage" id="stage">
+
+  <!-- ROW 0: Back cymbals (ride left, crash right — far from drummer) -->
+  <div class="row row-cymbals-back" id="rowCymBack"></div>
+
+  <!-- ROW 1: Front cymbals (hihat left, crash/splash right) -->
+  <div class="row row-cymbals-front" id="rowCymFront"></div>
+
+  <!-- ROW 2: Hanging toms + floor tom -->
+  <div class="row row-toms" id="rowToms"></div>
+
+  <!-- ROW 3: Snare + Kick body -->
+  <div class="row row-main" id="rowMain"></div>
+
+  <!-- ROW 4: Pedals at bottom (closest to drummer) -->
+  <div class="row row-pedals" id="rowPedals"></div>
+
+</div>
+
+<!-- SHOP MODAL -->
+<div class="modal-overlay" id="shopModal">
+  <div class="shop-modal">
+    <div class="shop-hdr">
+      <div><div class="shop-title">FATERIA SHOP</div><div class="shop-sub">Diseña tu kit perfecto</div></div>
+      <button class="btn-close" onclick="closeShop()">✕</button>
+    </div>
+    <div class="shop-tabs">
+      <div class="shop-tab active" onclick="switchTab('presets',this)">PRESETS</div>
+      <div class="shop-tab" onclick="switchTab('cymbals',this)">PLATILLOS</div>
+      <div class="shop-tab" onclick="switchTab('drums',this)">TAMBORES</div>
+      <div class="shop-tab" onclick="switchTab('build',this)">MI KIT</div>
+    </div>
+    <div class="shop-body" id="shopBody"></div>
+  </div>
+</div>
+
+<script>
+// =============================================================
+//  AUDIO ENGINE
+// =============================================================
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+const comp = AC.createDynamicsCompressor();
+comp.threshold.value=-18;comp.knee.value=10;comp.ratio.value=4;comp.attack.value=0.003;comp.release.value=0.25;
+comp.connect(AC.destination);
+const master = AC.createGain(); master.gain.value=0.88; master.connect(comp);
+
+let reverb;
+(async()=>{
+  const cv=AC.createConvolver(),len=AC.sampleRate*1.5,buf=AC.createBuffer(2,len,AC.sampleRate);
+  for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4);}
+  cv.buffer=buf;const wet=AC.createGain();wet.gain.value=0.11;cv.connect(wet);wet.connect(master);reverb=cv;
+})();
+
+function noise(dur,t='white'){
+  const buf=AC.createBuffer(1,AC.sampleRate*dur,AC.sampleRate),d=buf.getChannelData(0);
+  if(t==='white')for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  else{let b0=0,b1=0,b2=0;for(let i=0;i<d.length;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;d[i]=(b0+b1+b2+w*.5362)*.11;}}
+  const s=AC.createBufferSource();s.buffer=buf;return s;
+}
+
+function tom(fStart,fEnd,ramp,hold){
+  const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();
+  o.type='sine';o.frequency.setValueAtTime(fStart,t);o.frequency.exponentialRampToValueAtTime(fEnd,t+ramp);
+  g.gain.setValueAtTime(0.95,t);g.gain.exponentialRampToValueAtTime(0.001,t+hold);
+  const cl=noise(0.015),cg=AC.createGain();cg.gain.setValueAtTime(0.45,t);cg.gain.exponentialRampToValueAtTime(0.001,t+0.015);
+  cl.connect(cg);o.connect(g);g.connect(master);cg.connect(master);
+  o.start(t);cl.start(t);o.stop(t+hold+0.05);cl.stop(t+0.02);
+  if(reverb)g.connect(reverb);
+}
+
+const SND = {
+  kick:()=>{const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain(),g2=AC.createGain();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+0.16);g.gain.setValueAtTime(1.05,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.56);const cl=noise(0.025);g2.gain.setValueAtTime(0.55,t);g2.gain.exponentialRampToValueAtTime(0.001,t+0.025);cl.connect(g2);o.connect(g);g.connect(master);g2.connect(master);o.start(t);cl.start(t);o.stop(t+0.6);cl.stop(t+0.03);if(reverb)g.connect(reverb);},
+  kick2:()=>{const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(185,t);o.frequency.exponentialRampToValueAtTime(50,t+0.12);g.gain.setValueAtTime(1.1,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.42);const cl=noise(0.03),g2=AC.createGain();g2.gain.setValueAtTime(0.7,t);g2.gain.exponentialRampToValueAtTime(0.001,t+0.03);cl.connect(g2);o.connect(g);g.connect(master);g2.connect(master);o.start(t);cl.start(t);o.stop(t+0.46);cl.stop(t+0.04);if(reverb)g.connect(reverb);},
+  snare:()=>{const t=AC.currentTime,o=AC.createOscillator(),og=AC.createGain();o.type='triangle';o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(100,t+0.1);og.gain.setValueAtTime(0.7,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.16);o.connect(og);og.connect(master);o.start(t);o.stop(t+0.2);const ns=noise(0.22),ng=AC.createGain(),hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=1800;ng.gain.setValueAtTime(1.05,t);ng.gain.exponentialRampToValueAtTime(0.001,t+0.22);ns.connect(hpf);hpf.connect(ng);ng.connect(master);ns.start(t);ns.stop(t+0.26);if(reverb)ng.connect(reverb);},
+  snare2:()=>{const t=AC.currentTime,o=AC.createOscillator(),og=AC.createGain();o.type='triangle';o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(78,t+0.15);og.gain.setValueAtTime(0.9,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.22);o.connect(og);og.connect(master);o.start(t);o.stop(t+0.28);const ns=noise(0.32),ng=AC.createGain(),hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=1200;ng.gain.setValueAtTime(1.1,t);ng.gain.exponentialRampToValueAtTime(0.001,t+0.3);ns.connect(hpf);hpf.connect(ng);ng.connect(master);ns.start(t);ns.stop(t+0.34);if(reverb)ng.connect(reverb);},
+  snare3:()=>{const t=AC.currentTime,o=AC.createOscillator(),og=AC.createGain();o.type='square';o.frequency.setValueAtTime(900,t);o.frequency.exponentialRampToValueAtTime(280,t+0.05);og.gain.setValueAtTime(0.5,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.06);o.connect(og);og.connect(master);o.start(t);o.stop(t+0.08);const ns=noise(0.12),ng=AC.createGain(),hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=3200;ng.gain.setValueAtTime(0.7,t);ng.gain.exponentialRampToValueAtTime(0.001,t+0.1);ns.connect(hpf);hpf.connect(ng);ng.connect(master);ns.start(t);ns.stop(t+0.14);},
+  hihat:()=>{const t=AC.currentTime,ns=noise(0.08),hpf=AC.createBiquadFilter(),g=AC.createGain();hpf.type='highpass';hpf.frequency.value=7500;g.gain.setValueAtTime(0.48,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.08);ns.connect(hpf);hpf.connect(g);g.connect(master);ns.start(t);ns.stop(t+0.1);},
+  hihat_open:()=>{const t=AC.currentTime,ns=noise(0.6),hpf=AC.createBiquadFilter(),g=AC.createGain();hpf.type='highpass';hpf.frequency.value=6500;g.gain.setValueAtTime(0.44,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.55);ns.connect(hpf);hpf.connect(g);g.connect(master);ns.start(t);ns.stop(t+0.65);if(reverb)g.connect(reverb);},
+  hihatpedal:()=>{const t=AC.currentTime,ns=noise(0.055),hpf=AC.createBiquadFilter(),g=AC.createGain();hpf.type='highpass';hpf.frequency.value=6200;g.gain.setValueAtTime(0.33,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.055);ns.connect(hpf);hpf.connect(g);g.connect(master);ns.start(t);ns.stop(t+0.07);},
+  crash:()=>{const t=AC.currentTime,ns=noise(2.2),g=AC.createGain(),hpf=AC.createBiquadFilter();hpf.type='bandpass';hpf.frequency.value=5000;hpf.Q.value=0.28;g.gain.setValueAtTime(0.82,t);g.gain.exponentialRampToValueAtTime(0.001,t+2);ns.connect(hpf);hpf.connect(g);g.connect(master);ns.start(t);ns.stop(t+2.2);const o=AC.createOscillator(),og=AC.createGain();o.type='sine';o.frequency.value=3200;og.gain.setValueAtTime(0.14,t);og.gain.exponentialRampToValueAtTime(0.001,t+1.6);o.connect(og);og.connect(master);o.start(t);o.stop(t+1.7);if(reverb)g.connect(reverb);},
+  crash2:()=>{const t=AC.currentTime,ns=noise(1.9),g=AC.createGain(),hpf=AC.createBiquadFilter();hpf.type='bandpass';hpf.frequency.value=5600;hpf.Q.value=0.33;g.gain.setValueAtTime(0.75,t);g.gain.exponentialRampToValueAtTime(0.001,t+1.7);ns.connect(hpf);hpf.connect(g);g.connect(master);ns.start(t);ns.stop(t+2);if(reverb)g.connect(reverb);},
+  splash:()=>{const t=AC.currentTime,ns=noise(0.65),g=AC.createGain(),hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=7200;g.gain.setValueAtTime(0.48,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.55);ns.connect(hpf);hpf.connect(g);g.connect(master);ns.start(t);ns.stop(t+0.7);if(reverb)g.connect(reverb);},
+  china:()=>{const t=AC.currentTime,ns=noise(2.6),g=AC.createGain(),hpf=AC.createBiquadFilter();hpf.type='bandpass';hpf.frequency.value=4500;hpf.Q.value=0.22;g.gain.setValueAtTime(0.9,t);g.gain.exponentialRampToValueAtTime(0.001,t+2.3);const dist=AC.createWaveShaper(),curve=new Float32Array(256);for(let i=0;i<256;i++){const x=i*2/256-1;curve[i]=x*Math.abs(x);}dist.curve=curve;ns.connect(hpf);hpf.connect(dist);dist.connect(g);g.connect(master);ns.start(t);ns.stop(t+2.6);if(reverb)g.connect(reverb);},
+  ride:()=>{const t=AC.currentTime,o=AC.createOscillator(),og=AC.createGain();o.type='sine';o.frequency.value=2650;og.gain.setValueAtTime(0.52,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.85);o.connect(og);og.connect(master);o.start(t);o.stop(t+0.95);const ns=noise(1.3),hpf=AC.createBiquadFilter(),g=AC.createGain();hpf.type='highpass';hpf.frequency.value=5200;g.gain.setValueAtTime(0.28,t);g.gain.exponentialRampToValueAtTime(0.001,t+1.1);ns.connect(hpf);hpf.connect(g);g.connect(master);ns.start(t);ns.stop(t+1.3);},
+  ride_bell:()=>{const t=AC.currentTime,o=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=3250;o2.type='sine';o2.frequency.value=4850;g.gain.setValueAtTime(0.6,t);g.gain.exponentialRampToValueAtTime(0.001,t+1.3);o.connect(g);o2.connect(g);g.connect(master);o.start(t);o2.start(t);o.stop(t+1.4);o2.stop(t+1.4);},
+  tom1:()=>tom(265,122,0.24,0.32),
+  tom2:()=>tom(202,92,0.29,0.36),
+  tom3:()=>tom(162,76,0.34,0.42),
+  floortom:()=>tom(112,56,0.4,0.52),
+  floortom2:()=>tom(90,46,0.5,0.62),
+  cowbell:()=>{const t=AC.currentTime,o1=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain(),hpf=AC.createBiquadFilter();o1.type='square';o1.frequency.value=562;o2.type='square';o2.frequency.value=845;hpf.type='highpass';hpf.frequency.value=400;g.gain.setValueAtTime(0.38,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.6);o1.connect(hpf);o2.connect(hpf);hpf.connect(g);g.connect(master);o1.start(t);o2.start(t);o1.stop(t+0.65);o2.stop(t+0.65);},
+  clap:()=>{const t=AC.currentTime;for(let i=0;i<3;i++){const ns=noise(0.04),g=AC.createGain(),hpf=AC.createBiquadFilter();hpf.type='bandpass';hpf.frequency.value=1200;hpf.Q.value=0.5;g.gain.setValueAtTime(0.58,t+i*0.012);g.gain.exponentialRampToValueAtTime(0.001,t+i*0.012+0.06);ns.connect(hpf);hpf.connect(g);g.connect(master);ns.start(t+i*0.012);ns.stop(t+i*0.012+0.08);}},
+  tambourine:()=>{const t=AC.currentTime,ns=noise(0.14),hpf=AC.createBiquadFilter(),g=AC.createGain();hpf.type='highpass';hpf.frequency.value=8200;g.gain.setValueAtTime(0.4,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.12);ns.connect(hpf);hpf.connect(g);g.connect(master);ns.start(t);ns.stop(t+0.16);}
+};
+
+// =============================================================
+//  CATALOG & PRESETS
+// =============================================================
+const CATALOG = {
+  cymbals:[
+    {id:'hihat',      name:'Hi-Hat 14"',     desc:'Cerrado · Clásico',   icon:'🥁', sound:'hihat',     badge:'hot'},
+    {id:'hihat_open', name:'Hi-Hat Abierto',  desc:'Open · Long sustain', icon:'🎵', sound:'hihat_open', badge:null},
+    {id:'crash',      name:'Crash 18"',       desc:'Standard crash',      icon:'💥', sound:'crash',     badge:'hot'},
+    {id:'crash2',     name:'Crash 16"',       desc:'Bright crash',        icon:'✨', sound:'crash2',    badge:null},
+    {id:'splash',     name:'Splash 10"',      desc:'Pequeño · Brillante', icon:'💫', sound:'splash',    badge:'new'},
+    {id:'china',      name:'China 18"',       desc:'Trashy · Agresivo',   icon:'🔥', sound:'china',     badge:'pro'},
+    {id:'ride',       name:'Ride 20"',        desc:'Classic ride',        icon:'⭕', sound:'ride',      badge:null},
+    {id:'ride_bell',  name:'Ride Bell',       desc:'Bell accent',         icon:'🔔', sound:'ride_bell', badge:null},
+  ],
+  drums:[
+    {id:'snare',     name:'Snare 14"',       desc:'Clásica · Crispa',    icon:'🥁', sound:'snare',     badge:'hot'},
+    {id:'snare2',    name:'Snare Fat 14"',   desc:'Grave · Power',       icon:'💪', sound:'snare2',    badge:null},
+    {id:'snare3',    name:'Rimshot',         desc:'Seco · Penetrante',   icon:'🎯', sound:'snare3',    badge:'new'},
+    {id:'tom1',      name:'Tom 10"',         desc:'High tom',            icon:'🔴', sound:'tom1',      badge:null},
+    {id:'tom2',      name:'Tom 12"',         desc:'Mid tom',             icon:'🟠', sound:'tom2',      badge:null},
+    {id:'tom3',      name:'Tom 14"',         desc:'Low tom',             icon:'🟡', sound:'tom3',      badge:null},
+    {id:'floortom',  name:'Floor Tom 16"',   desc:'Floor · Grave',       icon:'🟢', sound:'floortom',  badge:null},
+    {id:'floortom2', name:'Floor Tom 18"',   desc:'Super grave',         icon:'🟣', sound:'floortom2', badge:'pro'},
+    {id:'kick',      name:'Bass Drum 22"',   desc:'Standard kick',       icon:'⚫', sound:'kick',      badge:'hot'},
+    {id:'kick2',     name:'Bass Drum Punch', desc:'Punch · Tight',       icon:'👊', sound:'kick2',     badge:'new'},
+    {id:'cowbell',   name:'Cowbell',         desc:'More cowbell!',       icon:'🐄', sound:'cowbell',   badge:null},
+    {id:'clap',      name:'Clap',            desc:'Seco · Electrónico',  icon:'👏', sound:'clap',      badge:null},
+    {id:'tambourine',name:'Tamboril',        desc:'Shake it!',           icon:'🎭', sound:'tambourine',badge:'new'},
+  ]
+};
+
+const NAMES={};
+[...CATALOG.cymbals,...CATALOG.drums].forEach(i=>NAMES[i.sound]=i.name);
+NAMES.hihatpedal='Hi-Hat Pedal'; NAMES.kickpedal='Kick Pedal';
+
+const PRESETS=[
+  {id:'standard',name:'Kit Estándar',desc:'Rock clásico',icon:'🥁',
+   cfg:{cymBack:['ride','crash2'],cymFront:['hihat','crash'],toms:['tom1','tom2','tom3','floortom'],snare:'snare',kick:'kick',extras:[]}},
+  {id:'jazz',name:'Kit Jazz',desc:'Suave y dinámico',icon:'🎷',
+   cfg:{cymBack:['ride'],cymFront:['hihat','crash'],toms:['tom1','tom2','floortom'],snare:'snare',kick:'kick',extras:[]}},
+  {id:'metal',name:'Kit Metal',desc:'China, toms, agresivo',icon:'🤘',
+   cfg:{cymBack:['ride','china'],cymFront:['hihat','crash','crash2'],toms:['tom1','tom2','tom3','floortom2'],snare:'snare2',kick:'kick2',extras:['cowbell']}},
+  {id:'electronic',name:'Electrónico',desc:'Clap, samples digitales',icon:'⚡',
+   cfg:{cymBack:['ride','splash'],cymFront:['hihat_open','crash'],toms:['tom1','tom2','tom3'],snare:'snare3',kick:'kick2',extras:['clap']}},
+  {id:'minimal',name:'Minimalista',desc:'Solo lo esencial',icon:'🎯',
+   cfg:{cymBack:['ride'],cymFront:['hihat','crash'],toms:['tom1','tom2'],snare:'snare',kick:'kick',extras:[]}},
+];
+
+// Current kit config
+let KIT = JSON.parse(JSON.stringify(PRESETS[0].cfg));
+let currentPreset='standard';
+let shopBuildKit=null;
+
+// =============================================================
+//  SVG BUILDERS
+// =============================================================
+
+// CYMBAL SVG (flat ellipse from above)
+function cymbalSVG(type, diameter){
+  const W=diameter, H=Math.round(diameter*0.22)+2;
+  const palettes={
+    ride:'#b87800,#f0c830,#8a5a00',
+    ride_bell:'#c89000,#ffe060,#8a6000',
+    crash:'#c89010,#f5d060,#7a4800',
+    crash2:'#b07010,#e8c840,#6a3800',
+    splash:'#d4aa00,#fff0a0,#8a6a00',
+    china:'#aa4800,#e87020,#6a2400',
+    hihat:'#c8a000,#f5d060,#7a5800',
+    hihat_open:'#d4aa00,#fae070,#8a6400',
+    hihatpedal:'#c0980a,#eed050,#706000',
+  };
+  const [mid,hi,dark]=(palettes[type]||palettes.crash).split(',');
+  const rx=W/2-1, ry=H/2-1;
+  const bRx=Math.round(rx*0.16), bRy=Math.round(ry*0.7);
+  let grooves='';
+  for(let g=1;g<=4;g++){
+    const grx=Math.round(rx*(0.9-g*0.15)), gry=Math.round(ry*(0.88-g*0.12));
+    if(grx>bRx+2) grooves+=`<ellipse cx="${W/2}" cy="${H/2}" rx="${grx}" ry="${gry}" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="0.6"/>`;
+  }
+  // China gets wavy edge
+  let edgeExtra='';
+  if(type==='china'){
+    edgeExtra=`<path d="M ${W*0.05} ${H/2} Q ${W*0.15} ${H*0.1} ${W*0.3} ${H/2} Q ${W*0.45} ${H*0.9} ${W/2} ${H/2} Q ${W*0.55} ${H*0.1} ${W*0.7} ${H/2} Q ${W*0.85} ${H*0.9} ${W*0.95} ${H/2}" fill="none" stroke="rgba(255,100,0,0.4)" stroke-width="1.5"/>`;
+  }
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+    <defs>
+      <radialGradient id="cg_${type}_${W}" cx="50%" cy="40%" r="62%">
+        <stop offset="0%" stop-color="${hi}"/>
+        <stop offset="45%" stop-color="${mid}"/>
+        <stop offset="100%" stop-color="${dark}"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${rx}" ry="${ry}" fill="url(#cg_${type}_${W})" stroke="${dark}" stroke-width="0.5"/>
+    ${grooves}
+    ${edgeExtra}
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${bRx}" ry="${bRy}" fill="${hi}"/>
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${Math.round(bRx*0.55)}" ry="${Math.round(bRy*0.6)}" fill="rgba(255,255,255,0.35)"/>
+    <circle cx="${W/2}" cy="${H/2}" r="2" fill="#888"/>
+  </svg>`;
+}
+
+// HI-HAT STACK (two cymbals close together)
+function hihatStackSVG(sound, W){
+  const H=Math.round(W*0.28);
+  const topH=Math.round(H*0.32), botH=Math.round(H*0.32), gap=Math.round(H*0.18);
+  const hi=sound==='hihat_open'?'#fae070':'#f5d060';
+  const mid=sound==='hihat_open'?'#d4aa00':'#c8a000';
+  const dark='#7a5800';
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+    <defs>
+      <radialGradient id="hhg_${W}a" cx="50%" cy="35%" r="60%"><stop offset="0%" stop-color="${hi}"/><stop offset="50%" stop-color="${mid}"/><stop offset="100%" stop-color="${dark}"/></radialGradient>
+      <radialGradient id="hhg_${W}b" cx="50%" cy="60%" r="60%"><stop offset="0%" stop-color="${mid}"/><stop offset="60%" stop-color="${dark}"/><stop offset="100%" stop-color="#4a3200"/></radialGradient>
+    </defs>
+    <!-- bottom cymbal -->
+    <ellipse cx="${W/2}" cy="${H-topH/2}" rx="${W/2-1}" ry="${botH/2}" fill="url(#hhg_${W}b)"/>
+    <ellipse cx="${W/2}" cy="${H-topH/2}" rx="${W*0.14}" ry="${botH*0.45}" fill="${mid}"/>
+    <!-- rod -->
+    <line x1="${W/2}" y1="${topH}" x2="${W/2}" y2="${H-botH}" stroke="#aaa" stroke-width="3"/>
+    <!-- top cymbal -->
+    <ellipse cx="${W/2}" cy="${topH/2}" rx="${W/2-1}" ry="${topH/2}" fill="url(#hhg_${W}a)"/>
+    <ellipse cx="${W/2}" cy="${topH/2}" rx="${W*0.14}" ry="${topH*0.5}" fill="${hi}"/>
+    <ellipse cx="${W/2}" cy="${topH/2}" rx="${W*0.07}" ry="${topH*0.32}" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="${W/2}" cy="${topH/2}" r="2" fill="#888"/>
+  </svg>`;
+}
+
+// TOM SVG (from above, shows head)
+function tomSVG(sound, size){
+  const W=size, H=Math.round(size*0.85);
+  const rimW=Math.round(size*0.06), headRx=W/2-rimW-1, headRy=H/2-rimW-1;
+  const shellColors={
+    tom1:'#cc3300', tom2:'#006600', tom3:'#4400aa',
+    floortom:'#550088', floortom2:'#003388',
+    snare:'#c8cdd6', snare2:'#8a7a6a', snare3:'#6a8090',
+    kick:'#1a1a2e', kick2:'#001a00',
+    cowbell:'#666', clap:'#aa4400', tambourine:'#cc8800'
+  };
+  const shellC=shellColors[sound]||'#333';
+  const isSnare=sound.startsWith('snare');
+  // Head gradient (drumhead from above)
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+    <defs>
+      <radialGradient id="th_${sound}_${W}" cx="48%" cy="42%" r="58%">
+        <stop offset="0%" stop-color="#f0e8d8"/>
+        <stop offset="55%" stop-color="#d0c8b0"/>
+        <stop offset="100%" stop-color="#908070"/>
+      </radialGradient>
+      <radialGradient id="rim_${sound}_${W}" cx="50%" cy="50%" r="50%">
+        <stop offset="85%" stop-color="${shellC}"/>
+        <stop offset="100%" stop-color="${shellC}aa"/>
+      </radialGradient>
+    </defs>
+    <!-- Shell / rim ring -->
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${W/2-1}" ry="${H/2-1}" fill="${shellC}"/>
+    <!-- Chrome rim -->
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${W/2-1}" ry="${H/2-1}" fill="none" stroke="#c8cdd6" stroke-width="${rimW}"/>
+    <!-- Head -->
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${headRx}" ry="${headRy}" fill="url(#th_${sound}_${W})" class="drum-head"/>
+    <!-- Head center rings (tension wrinkles) -->
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${Math.round(headRx*0.7)}" ry="${Math.round(headRy*0.7)}" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.7"/>
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${Math.round(headRx*0.4)}" ry="${Math.round(headRy*0.4)}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    ${isSnare?`<!-- Snare strainer indicator --><line x1="${W*0.1}" y1="${H*0.88}" x2="${W*0.9}" y2="${H*0.88}" stroke="rgba(200,210,230,0.35)" stroke-width="1"/>
+    <line x1="${W*0.1}" y1="${H*0.93}" x2="${W*0.9}" y2="${H*0.93}" stroke="rgba(200,210,230,0.35)" stroke-width="1"/>`:``}
+    <!-- Lug bolts (from above) -->
+    ${lugDots(W,H,rimW)}
+  </svg>`;
+}
+
+function lugDots(W,H,rw){
+  const cx=W/2,cy=H/2,rx=W/2-rw*0.5,ry=H/2-rw*0.5;
+  const n=8,dots=[];
+  for(let i=0;i<n;i++){
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const x=cx+rx*Math.cos(a), y=cy+ry*Math.sin(a);
+    dots.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${Math.max(2,rw*0.45)}" fill="#aaa" stroke="#666" stroke-width="0.4"/>`);
+  }
+  return dots.join('');
+}
+
+// KICK DRUM (from above, big oval)
+function kickSVG(sound, W){
+  const H=Math.round(W*0.72);
+  const shellC=sound==='kick2'?'#001a00':'#100020';
+  const hoopC='#c8cdd6';
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+    <defs>
+      <radialGradient id="ksh_${sound}" cx="50%" cy="45%" r="55%">
+        <stop offset="0%" stop-color="#2a2a4a"/>
+        <stop offset="60%" stop-color="${shellC}"/>
+        <stop offset="100%" stop-color="#050505"/>
+      </radialGradient>
+      <radialGradient id="khead_${sound}" cx="48%" cy="42%" r="56%">
+        <stop offset="0%" stop-color="#e8e0d0"/>
+        <stop offset="50%" stop-color="#c8c0b0"/>
+        <stop offset="100%" stop-color="#888070"/>
+      </radialGradient>
+    </defs>
+    <!-- Outer shell/body -->
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${W/2-2}" ry="${H/2-2}" fill="url(#ksh_${sound})"/>
+    <!-- Chrome hoop -->
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${W/2-2}" ry="${H/2-2}" fill="none" stroke="${hoopC}" stroke-width="7"/>
+    <!-- Batter head -->
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${W/2-10}" ry="${H/2-10}" fill="url(#khead_${sound})" class="drum-head"/>
+    <!-- Head rings -->
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${W/2-18}" ry="${H/2-18}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+    <ellipse cx="${W/2}" cy="${H/2}" rx="${W/2-28}" ry="${H/2-28}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
+    <!-- Logo -->
+    <text x="${W/2}" y="${H/2+4}" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="${W*0.1}" fill="rgba(255,100,0,0.6)" letter-spacing="2">${sound==='kick2'?'PUNCH':'BASS'}</text>
+    <!-- Lug bolts -->
+    ${lugDots(W,H,8)}
+  </svg>`;
+}
+
+// PEDAL SVG (kick pedal or hihat pedal from above/side)
+function kickPedalSVG(W){
+  const H=Math.round(W*1.4);
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+    <defs>
+      <linearGradient id="pedframe" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#333"/><stop offset="40%" stop-color="#aaa"/><stop offset="60%" stop-color="#ddd"/><stop offset="100%" stop-color="#333"/>
+      </linearGradient>
+      <linearGradient id="pedplate" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#555"/><stop offset="50%" stop-color="#999"/><stop offset="100%" stop-color="#444"/>
+      </linearGradient>
+    </defs>
+    <!-- Frame chain/rod -->
+    <rect x="${W*0.44}" y="0" width="${W*0.12}" height="${H*0.35}" rx="2" fill="url(#pedframe)"/>
+    <!-- Hinge top -->
+    <rect x="${W*0.2}" y="${H*0.3}" width="${W*0.6}" height="${H*0.06}" rx="3" fill="url(#pedframe)"/>
+    <!-- Footplate -->
+    <rect x="${W*0.06}" y="${H*0.34}" width="${W*0.88}" height="${H*0.46}" rx="6" fill="url(#pedplate)"/>
+    <!-- Grip lines on plate -->
+    <line x1="${W*0.15}" y1="${H*0.42}" x2="${W*0.85}" y2="${H*0.42}" stroke="#333" stroke-width="1.2"/>
+    <line x1="${W*0.15}" y1="${H*0.5}" x2="${W*0.85}" y2="${H*0.5}" stroke="#333" stroke-width="1.2"/>
+    <line x1="${W*0.15}" y1="${H*0.58}" x2="${W*0.85}" y2="${H*0.58}" stroke="#333" stroke-width="1.2"/>
+    <line x1="${W*0.15}" y1="${H*0.66}" x2="${W*0.85}" y2="${H*0.66}" stroke="#333" stroke-width="1.2"/>
+    <line x1="${W*0.15}" y1="${H*0.74}" x2="${W*0.85}" y2="${H*0.74}" stroke="#333" stroke-width="1.2"/>
+    <!-- Base / spur -->
+    <rect x="0" y="${H*0.8}" width="${W}" height="${H*0.12}" rx="4" fill="url(#pedframe)"/>
+    <!-- Spring -->
+    <rect x="${W*0.42}" y="${H*0.08}" width="${W*0.16}" height="${H*0.24}" rx="3" fill="#555" stroke="#888" stroke-width="0.5"/>
+    <line x1="${W*0.5}" y1="${H*0.1}" x2="${W*0.5}" y2="${H*0.3}" stroke="#aaa" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <!-- Label -->
+    <text x="${W/2}" y="${H*0.96}" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="${W*0.22}" fill="#666" letter-spacing="1">KICK</text>
+  </svg>`;
+}
+
+function hihatPedalSVG(W){
+  const H=Math.round(W*1.5);
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+    <defs>
+      <linearGradient id="hhpframe" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#2a2a2a"/><stop offset="40%" stop-color="#999"/><stop offset="60%" stop-color="#ccc"/><stop offset="100%" stop-color="#2a2a2a"/>
+      </linearGradient>
+      <linearGradient id="hhpplate" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4a4a4a"/><stop offset="50%" stop-color="#888"/><stop offset="100%" stop-color="#3a3a3a"/>
+      </linearGradient>
+    </defs>
+    <!-- Rod -->
+    <rect x="${W*0.44}" y="0" width="${W*0.12}" height="${H*0.32}" rx="2" fill="url(#hhpframe)"/>
+    <rect x="${W*0.2}" y="${H*0.28}" width="${W*0.6}" height="${H*0.05}" rx="2" fill="url(#hhpframe)"/>
+    <rect x="${W*0.06}" y="${H*0.32}" width="${W*0.88}" height="${H*0.42}" rx="5" fill="url(#hhpplate)"/>
+    <line x1="${W*0.15}" y1="${H*0.39}" x2="${W*0.85}" y2="${H*0.39}" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="${W*0.15}" y1="${H*0.46}" x2="${W*0.85}" y2="${H*0.46}" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="${W*0.15}" y1="${H*0.53}" x2="${W*0.85}" y2="${H*0.53}" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="${W*0.15}" y1="${H*0.6}" x2="${W*0.85}" y2="${H*0.6}" stroke="#2a2a2a" stroke-width="1"/>
+    <line x1="${W*0.15}" y1="${H*0.67}" x2="${W*0.85}" y2="${H*0.67}" stroke="#2a2a2a" stroke-width="1"/>
+    <rect x="0" y="${H*0.74}" width="${W}" height="${H*0.1}" rx="3" fill="url(#hhpframe)"/>
+    <text x="${W/2}" y="${H*0.92}" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="${W*0.2}" fill="#555" letter-spacing="1">H·HAT</text>
+  </svg>`;
+}
+
+// =============================================================
+//  RENDER KIT
+// =============================================================
+function buildCymbal(sound, W, rodH, id){
+  const wrap=document.createElement('div');
+  wrap.className='cymbal-assy';
+  const tip=document.createElement('div'); tip.className='stand-tip';
+  const rod=document.createElement('div'); rod.className='stand-rod'; rod.style.height=rodH+'px';
+  const pad=document.createElement('div');
+  pad.className='cymbal-pad'; pad.id=id||'cym_'+sound; pad.dataset.sound=sound;
+  const isSt=sound.startsWith('hihat');
+  pad.innerHTML = isSt ? hihatStackSVG(sound,W) : cymbalSVG(sound,W);
+  const lbl=document.createElement('div');
+  lbl.className='cymbal-label'; lbl.textContent=NAMES[sound]||sound;
+  pad.appendChild(lbl);
+  wrap.appendChild(tip); wrap.appendChild(rod); wrap.appendChild(pad);
+  bindPad(pad);
+  return wrap;
+}
+
+function buildDrum(sound, W, id, extLabel){
+  const el=document.createElement('div');
+  el.className='drum-pad'; el.id=id||'drum_'+sound; el.dataset.sound=sound;
+  el.innerHTML=tomSVG(sound,W);
+  const lbl=document.createElement('div'); lbl.className='drum-label-ext';
+  lbl.textContent=extLabel||(NAMES[sound]||sound.toUpperCase()); el.appendChild(lbl);
+  bindPad(el); return el;
+}
+
+function buildKick(sound, W, id){
+  const el=document.createElement('div');
+  el.className='drum-pad'; el.id=id||'kick'; el.dataset.sound=sound;
+  el.innerHTML=kickSVG(sound,W);
+  const lbl=document.createElement('div'); lbl.className='drum-label-ext';
+  lbl.style.bottom='-18px'; lbl.textContent='BASS DRUM'; el.appendChild(lbl);
+  bindPad(el); return el;
+}
+
+function buildPedal(type, W, id){
+  const assy=document.createElement('div');
+  assy.className='pedal-assy'; assy.id=id||type;
+  assy.dataset.sound=type==='kick'?KIT.kick:type;
+  const plate=document.createElement('div'); plate.className='pedal-plate';
+  plate.innerHTML=type==='kick'?kickPedalSVG(W):hihatPedalSVG(W);
+  const lbl=document.createElement('div');
+  lbl.style.cssText='text-align:center;font-size:8px;letter-spacing:2px;color:#444;font-family:Bebas Neue,sans-serif;margin-top:4px;text-transform:uppercase;';
+  lbl.textContent=type==='kick'?'KICK PEDAL':'HH PEDAL';
+  assy.appendChild(plate); assy.appendChild(lbl);
+  assy.addEventListener('touchstart',e=>{e.preventDefault();triggerDrum(assy);},{passive:false});
+  assy.addEventListener('mousedown',e=>{e.preventDefault();triggerDrum(assy);});
+  return assy;
+}
+
+function renderKit(){
+  const sw=Math.min(window.innerWidth,700);
+  const cfg=KIT;
+
+  // ---- BACK CYMBALS ----
+  const rcb=document.getElementById('rowCymBack'); rcb.innerHTML='';
+  if(cfg.cymBack&&cfg.cymBack.length){
+    cfg.cymBack.forEach((s,i)=>{
+      const wBase=Math.max(80,Math.min(150, Math.floor((sw-60)/Math.max(cfg.cymBack.length,1)-8)));
+      const rod=22+i*6;
+      rcb.appendChild(buildCymbal(s,s==='ride'?Math.min(wBase+20,160):wBase, rod,'cymback_'+i));
+    });
+  }
+
+  // ---- FRONT CYMBALS ----
+  const rcf=document.getElementById('rowCymFront'); rcf.innerHTML='';
+  if(cfg.cymFront&&cfg.cymFront.length){
+    const cfw=Math.max(75,Math.min(130, Math.floor((sw-40)/Math.max(cfg.cymFront.length,1)-8)));
+    cfg.cymFront.forEach((s,i)=>{
+      const rod=14+i*4;
+      rcf.appendChild(buildCymbal(s, s.startsWith('hihat')?Math.min(cfw,110):cfw, rod,'cymfront_'+i));
+    });
+  }
+
+  // ---- TOMS ROW ----
+  const rt=document.getElementById('rowToms'); rt.innerHTML='';
+  if(cfg.toms&&cfg.toms.length){
+    // Split: hanging toms left/center, floor tom rightmost
+    const floorToms=cfg.toms.filter(t=>t.startsWith('floortom'));
+    const hangToms=cfg.toms.filter(t=>!t.startsWith('floortom'));
+    const totalToms=cfg.toms.length;
+    const tomW=Math.max(58,Math.min(100, Math.floor((sw-60)/Math.max(totalToms,1)-6)));
+    hangToms.forEach((s,i)=>rt.appendChild(buildDrum(s, tomW,'tom_'+i)));
+    floorToms.forEach((s,i)=>rt.appendChild(buildDrum(s, Math.round(tomW*1.2),'ftom_'+i)));
+  }
+
+  // ---- MAIN ROW (snare + extras) ----
+  const rm=document.getElementById('rowMain'); rm.innerHTML='';
+  const mainItems=[];
+  if(cfg.snare) mainItems.push({s:cfg.snare, label:'SNARE', key:'snare'});
+  if(cfg.extras)cfg.extras.forEach((s,i)=>mainItems.push({s,label:NAMES[s]||s,key:'extra_'+i}));
+  const mTomW=Math.max(65,Math.min(120, Math.floor((sw-60)/Math.max(mainItems.length+1,1)-8)));
+  mainItems.forEach(m=>rm.appendChild(buildDrum(m.s,mTomW,m.key,m.label)));
+  // Kick (shown from above in main row)
+  if(cfg.kick){
+    const kW=Math.max(110,Math.min(200, Math.round(sw*0.32)));
+    rm.appendChild(buildKick(cfg.kick, kW, 'kick_main'));
+  }
+
+  // ---- PEDALS ROW ----
+  const rp=document.getElementById('rowPedals'); rp.innerHTML='';
+  const pW=Math.max(52,Math.min(80, Math.round(sw*0.12)));
+
+  // HH Pedal left
+  const hhPedal=buildPedal('hihat','hihatpedal', pW*1.05, 'hhpedal');
+  hhPedal.dataset.sound='hihatpedal';
+  rp.style.cssText='display:flex;justify-content:center;align-items:flex-start;gap:0;padding:0 6px;';
+  rp.style.width='100%';
+
+  // Layout: [HH-pedal] ---- [kick-pedal] ---- [gap]
+  const hhW=pW+4, kpW=Math.round(pW*1.2);
+  const spacerW=Math.round((sw - hhW - kpW - 32)/2);
+
+  const hhP=buildPedal('hihat',hhW,'hhpedal'); hhP.dataset.sound='hihatpedal';
+  const kpSpacer=document.createElement('div'); kpSpacer.style.cssText=`width:${spacerW}px;flex-shrink:0;`;
+  const kP=buildPedal('kick',kpW,'kickpedal'); kP.dataset.sound=cfg.kick||'kick';
+  const rightSpacer=document.createElement('div'); rightSpacer.style.cssText=`width:${spacerW}px;flex-shrink:0;`;
+
+  rp.appendChild(hhP); rp.appendChild(kpSpacer); rp.appendChild(kP); rp.appendChild(rightSpacer);
+}
+
+// =============================================================
+//  INTERACTION
+// =============================================================
+let hitCount=0;
+
+function bindPad(el){
+  el.addEventListener('touchstart',e=>{e.preventDefault();triggerDrum(el);},{passive:false});
+  el.addEventListener('mousedown',e=>{e.preventDefault();triggerDrum(el);});
+}
+
+function triggerDrum(el, fromPlay=false){
+  if(AC.state==='suspended')AC.resume();
+  const s=el.dataset.sound;
+  if(!s)return;
+  if(SND[s])SND[s]();
+
+  const isPedal=el.classList.contains('pedal-assy');
+  if(isPedal){
+    el.classList.add('hit');
+    setTimeout(()=>el.classList.remove('hit'),90);
+  } else {
+    el.classList.add('hit');
+    setTimeout(()=>el.classList.remove('hit'),95);
+    const fx=document.createElement('div');
+    const isCym=el.classList.contains('cymbal-pad');
+    fx.className=(isCym?'cym-ripple':'hit-flash')+(fromPlay?' play-flash':'');
+    el.appendChild(fx);
+    setTimeout(()=>fx.remove(),380);
+  }
+
+  if(!fromPlay){
+    hitCount++;
+    document.getElementById('sHit').textContent=NAMES[s]||s.toUpperCase();
+    document.getElementById('sCount').textContent='HITS: '+hitCount;
+    const vf=document.getElementById('velFill');
+    vf.style.width=(68+Math.random()*32)+'%';
+    setTimeout(()=>vf.style.width='0%',200);
+    if(isRecording){recording.push({t:performance.now()-recStart,s});updateWave();}
+  }
+}
+
+// =============================================================
+//  RECORDING
+// =============================================================
+let isRecording=false,isPlaying=false,recording=[],recStart=0,recDur=0;
+let recTick=null,pbTOs=[];
+
+function toggleRec(){
+  if(AC.state==='suspended')AC.resume();
+  if(isPlaying)stopAll();
+  if(!isRecording){
+    isRecording=true; recording=[]; recStart=performance.now(); recDur=0;
+    document.getElementById('btnRec').classList.add('active');
+    document.getElementById('btnRec').textContent='⏺ STOP';
+    document.getElementById('tRecDisp').style.display='block';
+    document.getElementById('tPlayDisp').style.display='none';
+    recTick=setInterval(()=>{
+      recDur=(performance.now()-recStart)/1000;
+      const m=Math.floor(recDur/60),s=(recDur%60).toFixed(1).padStart(4,'0');
+      document.getElementById('tRecDisp').textContent=`⏺ ${m}:${s}`;
+      document.getElementById('tEvCount').textContent=recording.length+' ev';
+    },100);
+  } else stopRec();
+}
+
+function stopRec(){
+  isRecording=false; recDur=(performance.now()-recStart)/1000;
+  clearInterval(recTick);
+  document.getElementById('btnRec').classList.remove('active');
+  document.getElementById('btnRec').textContent='⏺ REC';
+  document.getElementById('tRecDisp').style.display='none';
+  document.getElementById('tEvCount').textContent=recording.length+' ev · '+recDur.toFixed(1)+'s';
+  drawWave();
+}
+
+function togglePlay(){
+  if(!recording.length)return;
+  if(isRecording)stopRec();
+  if(isPlaying){stopAll();return;}
+  isPlaying=true;
+  document.getElementById('btnPlay').classList.add('playing');
+  document.getElementById('btnPlay').textContent='⏸ PLAY';
+  document.getElementById('tPlayDisp').style.display='block';
+  const ph=document.getElementById('playhead'); ph.style.display='block';
+  const pStart=performance.now(); pbTOs=[];
+  recording.forEach(ev=>{
+    const to=setTimeout(()=>{
+      const el=document.querySelector(`[data-sound="${ev.s}"]`);
+      if(el)triggerDrum(el,true);
+    },ev.t); pbTOs.push(to);
+  });
+  const endTo=setTimeout(()=>stopAll(),recDur*1000+120); pbTOs.push(endTo);
+  const raf=()=>{
+    if(!isPlaying)return;
+    const elapsed=(performance.now()-pStart)/1000;
+    const pct=Math.min(elapsed/recDur,1)*100;
+    ph.style.left=pct+'%';
+    const m=Math.floor(elapsed/60),s=(elapsed%60).toFixed(1).padStart(4,'0');
+    document.getElementById('tPlayDisp').textContent=`▶ ${m}:${s}`;
+    requestAnimationFrame(raf);
+  };
+  requestAnimationFrame(raf);
+}
+
+function stopAll(){
+  if(isRecording)stopRec();
+  isPlaying=false;
+  pbTOs.forEach(t=>clearTimeout(t)); pbTOs=[];
+  document.getElementById('btnPlay').classList.remove('playing');
+  document.getElementById('btnPlay').textContent='▶ PLAY';
+  document.getElementById('tPlayDisp').style.display='none';
+  document.getElementById('playhead').style.display='none';
+}
+
+function clearRec(){
+  stopAll(); recording=[]; recDur=0;
+  document.getElementById('tEvCount').textContent='';
+  const cv=document.getElementById('waveCanvas'),ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+}
+
+function updateWave(){
+  if(!recording.length)return;
+  const cv=document.getElementById('waveCanvas'),ctx=cv.getContext('2d');
+  cv.width=cv.offsetWidth||300; cv.height=cv.offsetHeight||24;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const el=(performance.now()-recStart)/1000;
+  recording.forEach(ev=>{
+    const x=(ev.t/1000/Math.max(el,1))*cv.width;
+    ctx.fillStyle='rgba(255,120,0,0.7)';
+    ctx.fillRect(x-1,3,2,cv.height-6);
+  });
+}
+
+function drawWave(){
+  if(!recording.length)return;
+  const cv=document.getElementById('waveCanvas'),ctx=cv.getContext('2d');
+  cv.width=cv.offsetWidth||300; cv.height=cv.offsetHeight||24;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  recording.forEach(ev=>{
+    const x=(ev.t/1000/recDur)*cv.width;
+    ctx.fillStyle='rgba(68,255,136,0.85)';
+    ctx.fillRect(x-1,2,2,cv.height-4);
+  });
+}
+
+// =============================================================
+//  SHOP
+// =============================================================
+let shopBuild=null,shopTab='presets';
+
+function openShop(){ shopBuild=JSON.parse(JSON.stringify(KIT)); document.getElementById('shopModal').classList.add('open'); renderShopTab('presets'); }
+function closeShop(){ document.getElementById('shopModal').classList.remove('open'); }
+function switchTab(tab,el){ document.querySelectorAll('.shop-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); shopTab=tab; renderShopTab(tab); }
+
+function renderShopTab(tab){
+  const b=document.getElementById('shopBody');
+  if(tab==='presets') renderPresets(b);
+  else if(tab==='cymbals') renderCatalog(b,'cymbals');
+  else if(tab==='drums') renderCatalog(b,'drums');
+  else renderBuild(b);
+}
+
+function renderPresets(b){
+  let h=`<div class="sec-lbl">KITS PREDISEÑADOS</div><div class="preset-list">`;
+  PRESETS.forEach(p=>{
+    const a=currentPreset===p.id;
+    h+=`<div class="preset-item ${a?'ap':''}" onclick="applyPreset('${p.id}')"><div class="pi-icon">${p.icon}</div><div class="pi-info"><div class="pi-name">${p.name}</div><div class="pi-desc">${p.desc}</div></div><div class="pi-chk">✓</div></div>`;
+  });
+  h+=`</div>`; b.innerHTML=h;
+}
+
+function renderCatalog(b,cat){
+  const items=CATALOG[cat];
+  const inKit=[...(KIT.cymBack||[]),...(KIT.cymFront||[]),...(KIT.toms||[]),KIT.snare,KIT.kick,...(KIT.extras||[])].filter(Boolean);
+  let h=`<div class="sec-lbl">${cat==='cymbals'?'PLATILLOS':'TAMBORES'}</div><div style="font-size:9px;letter-spacing:1px;color:#444;margin-bottom:10px">Toca para escuchar</div><div class="item-grid">`;
+  items.forEach(it=>{
+    const ik=inKit.includes(it.sound);
+    const bd=it.badge?`<span class="si-badge badge-${it.badge}">${it.badge.toUpperCase()}</span>`:'';
+    h+=`<div class="shop-item ${ik?'in-kit':''}" onclick="prevSnd('${it.sound}',this)">${bd}<div class="si-icon">${it.icon}</div><div class="si-name">${it.name}</div><div class="si-desc">${it.desc}</div>${ik?'<div style="font-size:8px;color:#44aa66;margin-top:2px">EN TU KIT ✓</div>':''}</div>`;
+  });
+  h+=`</div>`; b.innerHTML=h;
+}
+
+function renderBuild(b){
+  const sections=[
+    {key:'cymBack',   label:'PLATILLOS TRASEROS', slots:3, cat:'cymbals'},
+    {key:'cymFront',  label:'PLATILLOS FRONTALES', slots:3, cat:'cymbals'},
+    {key:'toms',      label:'TOMS', slots:5, cat:'drums'},
+  ];
+  let h=`<div style="font-size:9px;letter-spacing:1px;color:#444;margin-bottom:10px">Toca un slot para cambiar</div>`;
+  sections.forEach(sec=>{
+    h+=`<div class="sec-lbl">${sec.label}</div><div class="kit-builder">`;
+    for(let i=0;i<sec.slots;i++){
+      const s=shopBuild[sec.key]&&shopBuild[sec.key][i];
+      if(s){const it=[...CATALOG.cymbals,...CATALOG.drums].find(c=>c.sound===s)||{name:s,icon:'🥁'};
+      h+=`<div class="kit-slot filled" onclick="showPicker('${sec.key}',${i},'${sec.cat}')"><div class="ks-icon">${it.icon}</div><div class="ks-name">${it.name.split(' ').slice(0,2).join(' ')}</div><div class="ks-rm" onclick="event.stopPropagation();rmSlot('${sec.key}',${i})">✕</div></div>`;}
+      else h+=`<div class="kit-slot" onclick="showPicker('${sec.key}',${i},'${sec.cat}')"><div class="ks-icon" style="opacity:.25">＋</div><div class="ks-lbl">vacío</div></div>`;
+    }
+    h+=`</div>`;
+  });
+  // Snare + Kick singles
+  h+=`<div class="sec-lbl">CAJA & BOMBO</div><div class="kit-builder">`;
+  const snIt=[...CATALOG.drums].find(c=>c.sound===shopBuild.snare)||{name:'Snare',icon:'🥁'};
+  h+=`<div class="kit-slot filled" onclick="showPicker('snare',0,'drums')"><div class="ks-icon">${snIt.icon}</div><div class="ks-name">${snIt.name}</div><div class="ks-lbl">CAJA</div></div>`;
+  const kkIt=[...CATALOG.drums].find(c=>c.sound===shopBuild.kick)||{name:'Kick',icon:'⚫'};
+  h+=`<div class="kit-slot filled" onclick="showPicker('kick',0,'drums')"><div class="ks-icon">${kkIt.icon}</div><div class="ks-name">${kkIt.name}</div><div class="ks-lbl">BOMBO</div></div>`;
+  h+=`</div>`;
+  h+=`<button class="apply-btn" onclick="applyBuild()">APLICAR MI KIT</button>`;
+  b.innerHTML=h;
+}
+
+function showPicker(rowKey, idx, cat){
+  const b=document.getElementById('shopBody');
+  const items=cat==='cymbals'?CATALOG.cymbals:CATALOG.drums;
+  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button onclick="renderBuild(document.getElementById('shopBody'))" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#ccc;padding:5px 9px;border-radius:5px;cursor:pointer;font-family:Rajdhani,sans-serif;font-size:11px;letter-spacing:2px">← VOLVER</button><div class="sec-lbl" style="margin:0;border:none;padding:0">ELIGE INSTRUMENTO</div></div><div class="item-grid">`;
+  items.forEach(it=>{
+    h+=`<div class="shop-item" onclick="setSlot('${rowKey}',${idx},'${it.sound}')"><div class="si-icon">${it.icon}</div><div class="si-name">${it.name}</div><div class="si-desc">${it.desc}</div></div>`;
+  });
+  h+=`</div>`; b.innerHTML=h;
+}
+
+function setSlot(rk,idx,s){
+  if(rk==='snare'||rk==='kick'){shopBuild[rk]=s;}
+  else{if(!shopBuild[rk])shopBuild[rk]=[];shopBuild[rk][idx]=s;}
+  renderBuild(document.getElementById('shopBody'));
+  prevSnd(s);
+}
+
+function rmSlot(rk,idx){ if(shopBuild[rk])shopBuild[rk][idx]=null; renderBuild(document.getElementById('shopBody')); }
+
+function applyPreset(id){
+  const p=PRESETS.find(x=>x.id===id); if(!p)return;
+  KIT=JSON.parse(JSON.stringify(p.cfg)); currentPreset=id;
+  renderKit(); renderPresets(document.getElementById('shopBody'));
+  setTimeout(closeShop,280);
+}
+
+function applyBuild(){
+  ['cymBack','cymFront','toms','extras'].forEach(k=>{if(shopBuild[k])shopBuild[k]=shopBuild[k].filter(Boolean);});
+  KIT=JSON.parse(JSON.stringify(shopBuild)); currentPreset='custom';
+  renderKit(); closeShop();
+}
+
+function prevSnd(s,el){
+  if(AC.state==='suspended')AC.resume();
+  if(SND[s])SND[s]();
+  if(el){el.style.transform='scale(0.93)';setTimeout(()=>el.style.transform='',120);}
+}
+
+// =============================================================
+//  KEYBOARD + TOUCH
+// =============================================================
+document.addEventListener('touchstart',e=>{if(AC.state==='suspended')AC.resume();},{passive:true});
+document.addEventListener('touchmove',e=>{if(!document.getElementById('shopModal').classList.contains('open'))e.preventDefault();},{passive:false});
+
+const KEYS={' ':'kick','j':'snare','f':'hihat','g':'hihatpedal','c':'crash','v':'crash2','b':'ride','q':'tom1','w':'tom2','e':'tom3','r':'floortom','h':'cowbell','n':'kick'};
+document.addEventListener('keydown',e=>{
+  if(e.repeat||document.getElementById('shopModal').classList.contains('open'))return;
+  const s=KEYS[e.key.toLowerCase()]||KEYS[e.key];
+  if(s){const el=document.querySelector(`[data-sound="${s}"]`);if(el)triggerDrum(el);}
+  if(e.key===' ')e.preventDefault();
+});
+
+window.addEventListener('resize',()=>{ renderKit(); });
+
+// =============================================================
+//  INIT
+// =============================================================
+renderKit();
+</script>
+</body>
+</html>
