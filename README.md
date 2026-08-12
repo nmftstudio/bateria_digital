@@ -1,4 +1,4 @@
-# 🥁 Fateria
+# 🥁 Batería Digital
 
 **Emulador de batería profesional — vista del baterista — multi-touch — sin dependencias**
 
